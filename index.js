@@ -21,7 +21,36 @@ const hymnals = [
         base: "https://hymnary.org",
         postUrl: "#text"
     },
-    // Add more hymnals as needed
+    {
+        name: "hymnal 201-300",
+        address: "https://hymnary.org/hymnal/PH1990?page=2",
+        base: "https://hymnary.org",
+        postUrl: "#text"
+    },
+    {
+        name: "hymnal 301-400",
+        address: "https://hymnary.org/hymnal/PH1990?page=3",
+        base: "https://hymnary.org",
+        postUrl: "#text"
+    },
+    {
+        name: "hymnal 401-500",
+        address: "https://hymnary.org/hymnal/PH1990?page=4",
+        base: "https://hymnary.org",
+        postUrl: "#text"
+    },
+    {
+        name: "hymnal5101-600",
+        address: "https://hymnary.org/hymnal/PH1990?page=5",
+        base: "https://hymnary.org",
+        postUrl: "#text"
+    },
+    {
+        name: "hymnal 601-605",
+        address: "https://hymnary.org/hymnal/PH1990?page=6",
+        base: "https://hymnary.org",
+        postUrl: "#text"
+    }
 ];
 
 app.get('/', (req, res) => {
@@ -81,6 +110,7 @@ const scrapeHymnDetails = async (filteredHymns) => {
 
                 details.push({
                     title: hymn.title,
+                    url: hymn.url,
                     text: textContent.join('\n'),
                     source: hymn.source,
                 });
