@@ -40,7 +40,7 @@ const hymnals = [
         postUrl: "#text"
     },
     {
-        name: "hymnal5101-600",
+        name: "hymnal 501-600",
         address: "https://hymnary.org/hymnal/PH1990?page=5",
         base: "https://hymnary.org",
         postUrl: "#text"
