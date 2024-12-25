@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
 const app = express();
 
@@ -57,7 +57,8 @@ app.get('/', (req, res) => {
     res.json('Welcome to my Presbyterian Hymn API');
 });
 
-// Helper function to fetch hymn links
+
+
 const getHymns = async () => {
     for (let hymnal of hymnals) {
         try {
@@ -83,14 +84,14 @@ const getHymns = async () => {
     }
 };
 
-// Function to filter out invalid hymns
+
 const filterHymns = () => {
     return hymns.filter(
         hymn => hymn.title && !/^\d+$/.test(hymn.title) && !/^_+$/.test(hymn.title)
     );
 };
 
-// Function to scrape hymn details from `<div id="text">`
+
 const scrapeHymnDetails = async (filteredHymns) => {
     const details = [];
 
@@ -102,7 +103,6 @@ const scrapeHymnDetails = async (filteredHymns) => {
                 const html = response.data;
                 const $ = cheerio.load(html);
 
-                // Extract all `<p>` tags inside `<div id="text">`
                 const textContent = [];
                 $('#text p').each(function () {
                     textContent.push($(this).text().trim());
@@ -124,7 +124,7 @@ const scrapeHymnDetails = async (filteredHymns) => {
     return details;
 };
 
-// Endpoint to fetch hymn details
+
 app.get('/hymns', async (req, res) => {
     try {
         await getHymns();
@@ -133,6 +133,58 @@ app.get('/hymns', async (req, res) => {
         res.json(hymnDetails);
     } catch (err) {
         res.status(500).json({ error: 'Error fetching hymns' });
+    }
+});
+
+
+const normalizeString = (str) => {
+    return str
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
+
+app.get('/hymns/:hymnId', async (req, res) => {
+    const hymnId = normalizeString(decodeURIComponent(req.params.hymnId));
+
+    const matchingHymns = hymns.filter(hymn => normalizeString(hymn.title).includes(hymnId));
+
+    if (matchingHymns.length === 0) {
+        return res.status(404).json({ error: 'Hymn not found' });
+    }
+
+    // If there are multiple matches, return all matching hymns
+    if (matchingHymns.length > 1) {
+        return res.json({ matches: matchingHymns });
+    }
+
+    const hymn = matchingHymns[0];
+
+    try {
+        const response = await axios.get(hymn.url);
+
+        if (response.status === 200) {
+            const html = response.data;
+            const $ = cheerio.load(html);
+
+            const textContent = [];
+            $('#text p').each(function () {
+                textContent.push($(this).text().trim());
+            });
+
+            return res.json({
+                title: hymn.title,
+                text: textContent.join('\n') || 'Text not available',
+                source: hymn.source,
+                url: hymn.url,
+            });
+        } else {
+            return res.status(500).json({ error: 'Error fetching hymn details' });
+        }
+    } catch (err) {
+        console.error(`Error fetching hymn details for ${hymn.title}:`, err);
+        return res.status(500).json({ error: 'Error fetching hymn details' });
     }
 });
 
